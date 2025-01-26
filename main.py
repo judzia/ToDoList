@@ -1,10 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QInputDialog, QComboBox, QListWidget, QLineEdit, QMainWindow, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton
+from PyQt5.QtWidgets import QApplication, QInputDialog, QComboBox, QListWidget, QLineEdit, QMainWindow, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QFont
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QPalette, QBrush
-
 import json
 
 
@@ -95,7 +92,7 @@ class MainWindow(QMainWindow):
         )
         add_button.clicked.connect(self.add_task)
 
-        self.task_list = QListWidget()
+        #self.task_list = QListWidget()
         self.task_list.setFont(QFont("Arial", 12))
         self.task_list.setStyleSheet(
             "QListWidget {"
@@ -201,8 +198,8 @@ class MainWindow(QMainWindow):
         if task:  # Check if the input is not empty            
             list_item = f"📝 {task} - Priority: {priority} - Status: {status}"
             self.task_list.addItem(list_item)
-            self.save_tasks()  # Save tasks after adding
             self.task_input.clear()  # Clear the input field
+            self.update_json()
 
 
     def remove_task(self):
@@ -211,7 +208,7 @@ class MainWindow(QMainWindow):
             return
         for item in selected_items:
             self.task_list.takeItem(self.task_list.row(item))
-        self.save_tasks()  # Save tasks after removal 
+        self.update_json()
 
 
     def edit_priority(self):
@@ -221,19 +218,19 @@ class MainWindow(QMainWindow):
             return
 
         item = selected_items[0]
-        task_details = item.text().rsplit(" - Priority: ", 1)
-        if len(task_details) != 2:
+        task_details = item.text().split(" - ")
+        if len(task_details) < 3:
             return
 
-        task, current_priority_and_status = task_details
-        current_priority = current_priority_and_status.split(" - Status: ")[0]  # Extract only the priority
+        task, current_priority,status = task_details[0], task_details[1].replace("Priority: ", ""), task_details[2].replace("Status: ", "")
 
         priorities = ["Low", "Medium", "High"]
         new_priority, ok = QInputDialog.getItem(
             self, "Edit Priority", "Select new priority:", priorities, priorities.index(current_priority), False)
         if ok:
-            item.setText(f"{task} - Priority: {new_priority} - Status: {current_priority_and_status.split(' - Status: ')[1]}")
-            self.save_tasks()  # Save tasks after edit
+            item.setText(f"{task} - Priority: {new_priority} - Status: {status}")
+            self.update_json()
+
 
     def edit_status(self):
         """Edit the status of the selected task."""
@@ -242,39 +239,49 @@ class MainWindow(QMainWindow):
             return
 
         item = selected_items[0]
-        task_details = item.text().rsplit(" - Priority: ", 1)
-        if len(task_details) != 2:
+        task_details = item.text().split(" - ")
+        if len(task_details) != 3:
             return
 
-        task, priority_and_status = task_details
-        current_status = priority_and_status.split(" - Status: ")[1]  # Extract current status
+        task, priority, current_status = task_details[0], task_details[1].replace("Priority: ", ""), task_details[2].replace("Status: ", "")
 
         statuses = ["To Do", "In Progress", "Done"]
         new_status, ok = QInputDialog.getItem(
             self, "Edit Status", "Select new status:", statuses, statuses.index(current_status), False)
         if ok:
-            item.setText(f"{task} - Priority: {priority_and_status.split(' - Status: ')[0]} - Status: {new_status}")
-            self.save_tasks()  # Save tasks after edit
+            item.setText(f"{task} - Priority: {priority} - Status: {new_status}")
+            self.update_json()
 
         
-    def save_tasks(self):
-        tasks = []
-        for index in range(self.task_list.count()):
-            task_text = self.task_list.item(index).text()
-            tasks.append(task_text)
-
-        with open("tasks.json", "w") as file:
-            json.dump(tasks, file)
-
+        
+        
     def load_tasks(self):
+        """Load tasks from the JSON file and display them in the list."""
         try:
             with open("tasks.json", "r") as file:
                 tasks = json.load(file)
                 for task in tasks:
-                    self.task_list.addItem(task)
-        except FileNotFoundError:
-            pass  # No tasks file found, it's fine
+                    task_text = f"{task['task']} - Priority: {task['priority']} - Status: {task['status']}"
+                    self.task_list.addItem(task_text)
+        except (FileNotFoundError, json.JSONDecodeError):
+            # If the file doesn't exist or is invalid, start with an empty list
+            pass
 
+
+    def update_json(self):
+        """Update the JSON file with the current list of tasks."""
+        tasks = []
+        for index in range(self.task_list.count()):
+            item = self.task_list.item(index).text()
+            task_details = item.split(" - ")
+            if len(task_details) == 3:
+                task = task_details[0]
+                priority = task_details[1].replace("Priority: ", "")
+                status = task_details[2].replace("Status: ", "")
+                tasks.append({"task": task, "priority": priority, "status": status})
+
+        with open("tasks.json", "w") as file:
+            json.dump(tasks, file, indent=4)
 
 
 
