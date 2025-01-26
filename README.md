@@ -38,6 +38,7 @@ Start the application with:
 
 
 # 🖼️ Application Preview
-![image](https://github.com/user-attachments/assets/ace0d27a-8ff1-4ee3-947f-310bcb348a52)
+![image](https://github.com/user-attachments/assets/1b019db4-ed04-4099-a1b1-e970ce8c1379)
 
-## HAVE FUN!
+
+## HAVE FUN! ♡⊹˚₊‧⁺˖
