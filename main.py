@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QInputDialog, QComboBox, QListWidget, QLineEdit, QMainWindow, QLabel, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtGui import QPixmap, QPalette, QBrush
 import json
 
@@ -17,7 +17,8 @@ class MainWindow(QMainWindow):
         self.task_list = QListWidget()  
         self.load_tasks()  
         
-        
+        self.setWindowIcon(QIcon("images/bani.jpg"))
+
         self.status_selector = QComboBox()
         self.status_selector.addItems(["To Do", "In Progress", "Done"])
         self.initUI()
